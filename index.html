@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Pixel Canvas</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+  </head>
+  <body>
+    <main class="app">
+      <header class="app__header">
+        <h1 class="app__title">Pixel Canvas</h1>
+        <p class="app__subtitle">Open multiple tabs to collaborate!</p>
+      </header>
+
+      <section class="toolbar" aria-label="Color palette and actions">
+        <div class="palette" id="palette" role="group" aria-label="Color palette">
+          <!-- Color buttons are in script.js for cleaner HTML -->
+        </div>
+        <button id="clearBtn" class="btn btn--clear" type="button" aria-label="Clear canvas">Clear</button>
+      </section>
+
+      <section class="canvas-wrapper">
+        <div id="canvas" class="canvas" role="grid" aria-label="Pixel canvas" aria-rowcount="32" aria-colcount="32"></div>
+      </section>
+    </main>
+
+    <script src="script.js" defer></script>
+  </body>
+  </html>
+
+
