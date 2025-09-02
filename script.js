@@ -1,10 +1,13 @@
 /*
-  Simple Pixel Canvas - Local 32x32 grid
+  Collaborative Pixel Canvas - 32x32 grid with Yjs
   - Color palette: 8 swatches
   - Click to paint a pixel
-  - Local storage only (no real-time sync)
+  - Real-time collaboration with WebRTC
   - Clear button resets canvas
 */
+
+import * as Y from 'https://esm.sh/yjs'
+import { WebrtcProvider } from 'https://esm.sh/y-webrtc'
 
 (function () {
   const GRID_SIZE = 32;
@@ -24,6 +27,10 @@
   const clearBtn = document.getElementById('clearBtn');
   const canvasEl = document.getElementById('canvas');
 
+  const ydoc = new Y.Doc()
+  const pixels = ydoc.getArray('pixels') 
+  const provider = new WebrtcProvider('pixel-canvas-room', ydoc)
+
   //  brush 
   const brushCursor = document.createElement('div');
   brushCursor.className = 'brush-cursor';
@@ -37,14 +44,21 @@
   // Build pixel grid
   const totalPixels = GRID_SIZE * GRID_SIZE;
   const pixelElements = new Array(totalPixels);
-  const pixelData = new Array(totalPixels).fill(DEFAULT_COLOR);
+
+  if (pixels.length === 0) {
+    console.log('Initializing pixel array...')
+    for (let i = 0; i < totalPixels; i++) {
+      pixels.insert(i, [DEFAULT_COLOR])
+    }
+  }
 
   for (let i = 0; i < totalPixels; i++) {
     const div = document.createElement('div');
     div.className = 'pixel';
     div.setAttribute('role', 'gridcell');
     div.dataset.index = String(i);
-    div.style.backgroundColor = DEFAULT_COLOR;
+    const color = pixels.get(i) || DEFAULT_COLOR;
+    div.style.backgroundColor = color;
     canvasEl.appendChild(div);
     pixelElements[i] = div;
   }
@@ -95,10 +109,24 @@
     return Number.isFinite(idx) ? idx : -1;
   }
 
+  // Listen for changes 
+  pixels.observe((event) => {
+    console.log('Pixels changed! Updating DOM...');
+    for (let i = 0; i < totalPixels; i++) {
+      const color = pixels.get(i);
+      if (color && pixelElements[i]) {
+        pixelElements[i].style.backgroundColor = color;
+      }
+    }
+  });
+
   function paintIndex(idx, color) {
     if (idx < 0 || idx >= totalPixels) return;
-    // Update local data and DOM
-    pixelData[idx] = color;
+    
+    pixels.delete(idx, 1);        
+    pixels.insert(idx, [color]); 
+    
+    // Also update DOM immediately for responsiveness
     pixelElements[idx].style.backgroundColor = color;
   }
 
@@ -125,11 +153,12 @@
     brushCursor.classList.remove('painting');
   });
 
-  // Clear 
   clearBtn.addEventListener('click', () => {
+    console.log('Clearing canvas for everyone...');
+    // Clear the entire Yjs array and refill with default colors
+    pixels.delete(0, pixels.length);
     for (let i = 0; i < totalPixels; i++) {
-      pixelData[i] = DEFAULT_COLOR;
-      pixelElements[i].style.backgroundColor = DEFAULT_COLOR;
+      pixels.insert(i, [DEFAULT_COLOR]);
     }
     console.log('Canvas cleared');
   });
